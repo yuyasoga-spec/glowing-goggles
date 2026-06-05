@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>各事業バナー数値ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --cream: #faf7f2;
+    --cream2: #f2ede4;
+    --sand: #e8e0d0;
+    --warm-gray: #b8aa99;
+    --mid: #7a6e62;
+    --dark: #2d2820;
+    --ink: #1a1510;
+    --accent1: #c4703a;
+    --accent2: #4a7c6f;
+    --accent3: #7b5ea7;
+    --accent4: #c4923a;
+    --red: #d94f3d;
+    --border: #ddd5c8;
+    --shadow: 0 2px 16px rgba(45,40,32,0.08);
+    --shadow-lg: 0 8px 40px rgba(45,40,32,0.14);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: #fff;
+    border-bottom: 2px solid var(--sand);
+    padding: 0 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(45,40,32,0.06);
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: var(--accent1);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header-title { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
+  .header-sub { font-size: 11px; color: var(--warm-gray); font-family: 'DM Mono', monospace; margin-top: 1px; }
+
+  .sheet-tabs { display: flex; gap: 4px; }
+  .sheet-tab {
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--mid);
+    font-size: 12px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .sheet-tab:hover { border-color: var(--accent1); color: var(--accent1); }
+  .sheet-tab.active {
+    background: var(--accent1);
+    border-color: var(--accent1);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main { padding: 28px 36px 60px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── NAV TABS ── */
+  .nav-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--sand); margin-bottom: 28px; }
+  .nav-tab {
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--warm-gray);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.18s;
+  }
+  .nav-tab:hover { color: var(--dark); }
+  .nav-tab.active { color: var(--accent1); border-bottom-color: var(--accent1); font-weight: 700; }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-label { font-size: 11px; color: var(--warm-gray); white-space: nowrap; font-weight: 500; }
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--mid);
+    font-size: 11px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent1); color: var(--accent1); }
+  .filter-btn.active { background: var(--accent1); border-color: var(--accent1); color: #fff; font-weight: 700; }
+
+  /* ── KPI CARDS ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .kpi-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--c, var(--accent1));
+  }
+  .kpi-label { font-size: 10px; color: var(--warm-gray); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; font-weight: 500; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: var(--ink); font-family: 'DM Mono', monospace; line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--warm-gray); margin-top: 6px; }
+
+  /* ── CHARTS ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .chart-grid.single { grid-template-columns: 1fr; }
+  .chart-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-title::before {
+    content: '';
+    width: 3px; height: 16px;
+    background: var(--accent1);
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .chart-sub { font-size: 11px; color: var(--warm-gray); margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* ── DATA TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    color: var(--mid);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--sand);
+    font-weight: 600;
+    white-space: nowrap;
+    background: var(--cream2);
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--cream2);
+    transition: background 0.12s;
+  }
+  tbody tr:hover { background: var(--cream2); }
+  tbody td {
+    padding: 11px 14px;
+    color: var(--dark);
+    vertical-align: middle;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .badge-meta { background: #e8f0fe; color: #2952cc; }
+  .badge-tiktok { background: #fce4ec; color: #c2185b; }
+  .badge-video { background: #fff3e0; color: #e65100; }
+  .badge-still { background: #e8f5e9; color: #2e7d32; }
+  .mono { font-family: 'DM Mono', monospace; }
+  .img-thumb {
+    width: 48px; height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: block;
+  }
+  .no-img {
+    width: 48px; height: 48px;
+    border-radius: 6px;
+    border: 1.5px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--warm-gray);
+    font-size: 18px;
+    background: var(--cream2);
+  }
+
+  /* Clickable image cell in table */
+  .img-cell {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: transform 0.15s;
+  }
+  .img-cell:hover { transform: scale(1.06); }
+  .img-cell:hover .img-cell-overlay { opacity: 1; }
+  .img-cell-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.38);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .no-img.img-cell {
+    font-size: 22px;
+    color: var(--accent1);
+    border-color: var(--accent1);
+    border-style: dashed;
+  }
+  .no-img.img-cell:hover {
+    background: #fdf5ef;
+    border-color: var(--accent1);
+  }
+  .business-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  /* ── ADD FORM ── */
+  .add-section {
+    background: #fff;
+    border: 2px solid var(--sand);
+    border-radius: var(--radius);
+    padding: 30px 32px;
+    box-shadow: var(--shadow);
+    max-width: 760px;
+  }
+  .add-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .add-desc { font-size: 12px; color: var(--warm-gray); margin-bottom: 28px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1/-1; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--mid); letter-spacing: 0.06em; text-transform: uppercase; }
+  .form-label span { color: var(--red); margin-left: 2px; }
+  .form-input, .form-select, .form-textarea {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    color: var(--dark);
+    background: var(--cream);
+    transition: border-color 0.18s, box-shadow 0.18s;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--accent1);
+    box-shadow: 0 0 0 3px rgba(196,112,58,0.12);
+    background: #fff;
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  /* Image upload area */
+  .img-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--cream);
+    position: relative;
+  }
+  .img-upload-area:hover, .img-upload-area.drag { border-color: var(--accent1); background: #fdf5ef; }
+  .img-upload-area input[type=file] { display: none; }
+  .img-preview-wrap { display: flex; align-items: center; gap: 16px; }
+  .img-preview { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border); }
+  .img-upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .img-upload-text { font-size: 12px; color: var(--mid); }
+  .img-upload-hint { font-size: 10px; color: var(--warm-gray); margin-top: 4px; }
+  .img-clear-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--mid);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .img-clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .btn-submit {
+    margin-top: 24px;
+    padding: 12px 32px;
+    background: var(--accent1);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-submit:hover { background: #a85c2e; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(196,112,58,0.3); }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--accent2);
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Delete btn */
+  .btn-delete {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--warm-gray);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-delete:hover { border-color: var(--red); color: var(--red); background: #fff5f5; }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .record-count { font-size: 12px; color: var(--warm-gray); font-family: 'DM Mono', monospace; }
+
+  @media (max-width: 768px) {
+    header { padding: 0 16px; flex-wrap: wrap; height: auto; padding: 12px 16px; gap: 10px; }
+    main { padding: 20px 16px; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">📊</div>
+    <div>
+      <div class="header-title">各事業バナー数値ダッシュボード</div>
+      <div class="header-sub">Banner Performance Analytics</div>
+    </div>
+  </div>
+  <div class="sheet-tabs" id="sheetTabs"></div>
+</header>
+
+<main>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('overview')">📈 概要・グラフ</div>
+    <div class="nav-tab" onclick="switchTab('table')">📋 データ一覧</div>
+    <div class="nav-tab" onclick="switchTab('add')">➕ データ追加</div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar" id="filterBar"></div>
+
+  <!-- OVERVIEW TAB -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">事業別 平均CPC</div>
+        <div class="chart-sub">クリック単価（¥）の事業比較</div>
+        <div class="chart-wrap"><canvas id="chartCPC"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">事業別 平均CTR</div>
+        <div class="chart-sub">クリック率（%）の事業比較</div>
+        <div class="chart-wrap"><canvas id="chartCTR"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">媒体別 データ件数</div>
+        <div class="chart-sub">Meta / TikTok の割合</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chartMedia"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">形式別 平均CTR比較</div>
+        <div class="chart-sub">動画 vs 静止画</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chartFormat"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE TAB -->
+  <div class="tab-content" id="tab-table">
+    <div class="chart-card">
+      <div class="section-header">
+        <div class="chart-title">データ一覧</div>
+        <div class="record-count" id="recordCount">0件</div>
+      </div>
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>素材</th>
+              <th>事業名</th>
+              <th>媒体</th>
+              <th>形式</th>
+              <th>CPC (¥)</th>
+              <th>CTR (%)</th>
+              <th>コメント</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TAB -->
+  <div class="tab-content" id="tab-add">
+    <div class="add-section">
+      <div class="add-title">新規バナーデータを追加</div>
+      <div class="add-desc">以下のフォームに入力して、現在表示中のシートにデータを追加できます。</div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">事業名<span>*</span></label>
+          <input class="form-input" id="f_business" placeholder="例: ANNIN" list="businessList">
+          <datalist id="businessList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">媒体<span>*</span></label>
+          <select class="form-select" id="f_media">
+            <option value="">選択してください</option>
+            <option value="Meta">Meta</option>
+            <option value="Tiktok">TikTok</option>
+            <option value="Google">Google</option>
+            <option value="Twitter">Twitter / X</option>
+            <option value="LINE">LINE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">形式<span>*</span></label>
+          <select class="form-select" id="f_format">
+            <option value="">選択してください</option>
+            <option value="静止画">静止画</option>
+            <option value="動画">動画</option>
+            <option value="カルーセル">カルーセル</option>
+            <option value="ストーリーズ">ストーリーズ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPC（クリック単価 ¥）</label>
+          <input class="form-input mono" id="f_cpc" type="number" placeholder="例: 150" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CTR（クリック率 %）</label>
+          <input class="form-input mono" id="f_ctr" type="number" step="0.001" placeholder="例: 1.23" min="0">
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">素材名 / 画像</label>
+          <div class="img-upload-area" id="uploadArea" onclick="document.getElementById('f_image').click()"
+               ondragover="event.preventDefault(); this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)">
+            <input type="file" id="f_image" accept="image/*" onchange="handleImageUpload(this)">
+            <div id="uploadPlaceholder">
+              <div class="img-upload-icon">🖼️</div>
+              <div class="img-upload-text">クリックまたはドラッグ&amp;ドロップで画像をアップロード</div>
+              <div class="img-upload-hint">JPG・PNG・GIF・WEBP 対応</div>
+            </div>
+            <div id="uploadPreview" style="display:none" class="img-preview-wrap" onclick="event.stopPropagation()">
+              <img id="previewImg" class="img-preview" src="" alt="preview">
+              <div>
+                <div id="previewName" style="font-size:12px; color:var(--dark); margin-bottom:6px;"></div>
+                <button class="img-clear-btn" onclick="clearImage()">✕ 削除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">コメント・メモ</label>
+          <textarea class="form-textarea" id="f_comment" placeholder="気づきや特記事項をメモできます..."></textarea>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="addEntry()">
+        <span>＋</span> データを追加する
+      </button>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const INITIAL_DATA = {
+  "202603": [
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:103,ctr:1.84,comment:"",img:null},
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:108,ctr:1.74,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:392,ctr:0.25,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:223,ctr:0.65,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:185,ctr:0.70,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:250,ctr:0.53,comment:"機械学習狂いやすい",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:68,ctr:46.0,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:137,ctr:0.83,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:125,ctr:1.17,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:89,ctr:1.46,comment:"",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:68,ctr:0.46,comment:"",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:43,ctr:0.52,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:125,ctr:1.57,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:131,ctr:1.81,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:139,ctr:1.95,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:168,ctr:1.70,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:35,ctr:1.65,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:44,ctr:1.55,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:156,ctr:0.88,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:139,ctr:1.16,comment:"",img:null},
+    {business:"Incubation GEM",media:"Tiktok",format:"動画",cpc:34,ctr:0.58,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:116,ctr:1.79,comment:"1/18のみの数値",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:92,ctr:0.79,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:66,ctr:1.15,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:49,ctr:1.03,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:50,ctr:1.08,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:55,ctr:0.87,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:56,ctr:0.86,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:73,ctr:1.34,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:100,ctr:0.76,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:120,ctr:1.81,comment:"",img:null},
+  ],
+  "11～115": [
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:392,ctr:0.25,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:223,ctr:0.65,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:185,ctr:0.70,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:250,ctr:0.53,comment:"機械学習狂いやすい",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:68,ctr:46.0,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:137,ctr:0.83,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:125,ctr:1.17,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:89,ctr:1.46,comment:"",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:43,ctr:0.52,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:125,ctr:1.57,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:131,ctr:1.81,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:139,ctr:1.95,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:168,ctr:1.70,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:35,ctr:1.65,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:44,ctr:1.55,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:156,ctr:0.88,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:139,ctr:1.16,comment:"",img:null},
+    {business:"Incubation GEM",media:"Tiktok",format:"動画",cpc:34,ctr:0.58,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:116,ctr:1.79,comment:"1/18のみの数値",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:92,ctr:0.79,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:66,ctr:1.15,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:49,ctr:1.03,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:50,ctr:1.08,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:55,ctr:0.87,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:56,ctr:0.86,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:73,ctr:1.34,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:100,ctr:0.76,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:120,ctr:1.81,comment:"",img:null},
+  ],
+  "124~23": [
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:98,ctr:1.0,comment:"",img:null},
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:110,ctr:1.3,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:358,ctr:0.34,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:244,ctr:0.72,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:218,ctr:0.79,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:228,ctr:0.86,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:88,ctr:2.27,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:76,ctr:2.29,comment:"",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:72,ctr:0.44,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:32,ctr:2.66,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:51,ctr:1.70,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:80,ctr:2.83,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:99,ctr:2.05,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:86,ctr:3.54,comment:"",img:null},
+    {business:"Incubation GEM",media:"Tiktok",format:"動画",cpc:20,ctr:0.97,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:100,ctr:1.69,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:136,ctr:2.36,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:119,ctr:1.31,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:113,ctr:1.25,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:111,ctr:1.03,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:141,ctr:1.14,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:74,ctr:1.25,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:77,ctr:1.11,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:96,ctr:1.19,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:73,ctr:1.14,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:131,ctr:1.31,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:176,ctr:1.38,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:222,ctr:0.64,comment:"",img:null},
+  ],
+  "121~123": [
+    {business:"ASOBINEXT",media:"Meta",format:"動画",cpc:330,ctr:0.30,comment:"",img:null},
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:209,ctr:0.55,comment:"",img:null},
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:161,ctr:0.71,comment:"",img:null},
+    {business:"ASOBINEXT",media:"Meta",format:"静止画",cpc:221,ctr:0.90,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"動画",cpc:307,ctr:0.39,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:227,ctr:0.84,comment:"",img:null},
+    {business:"ANNIN",media:"Meta",format:"静止画",cpc:245,ctr:0.81,comment:"",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:55,ctr:0.38,comment:"",img:null},
+    {business:"ANNIN",media:"Tiktok",format:"動画",cpc:89,ctr:0.32,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:246,ctr:0.47,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:154,ctr:0.85,comment:"",img:null},
+    {business:"Incubation GEM",media:"Meta",format:"静止画",cpc:137,ctr:0.97,comment:"",img:null},
+    {business:"Incubation GEM",media:"Tiktok",format:"動画",cpc:33,ctr:0.52,comment:"",img:null},
+    {business:"Incubation GEM",media:"Tiktok",format:"動画",cpc:34,ctr:0.60,comment:"",img:null},
+    {business:"JELLY",media:"Meta",format:"静止画",cpc:241,ctr:0.82,comment:"",img:null},
+    {business:"JELLY",media:"Meta",format:"静止画",cpc:225,ctr:1.05,comment:"",img:null},
+    {business:"恋リア",media:"Meta",format:"静止画",cpc:36,ctr:2.89,comment:"",img:null},
+    {business:"恋リア",media:"Meta",format:"静止画",cpc:37,ctr:4.95,comment:"",img:null},
+    {business:"恋リア",media:"Meta",format:"静止画",cpc:16,ctr:16.67,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:85,ctr:1.16,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:120,ctr:0.87,comment:"",img:null},
+    {business:"Bitstar Next",media:"Meta",format:"静止画",cpc:63,ctr:1.31,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:163,ctr:0.91,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:139,ctr:0.96,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:159,ctr:1.04,comment:"",img:null},
+    {business:"MIGNON",media:"Meta",format:"静止画",cpc:144,ctr:1.15,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:81,ctr:0.99,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:111,ctr:1.15,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:113,ctr:1.00,comment:"",img:null},
+    {business:"gio",media:"Meta",format:"静止画",cpc:108,ctr:1.34,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:197,ctr:0.73,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:214,ctr:0.54,comment:"",img:null},
+    {business:"エンキャリ（スクール）",media:"Meta",format:"静止画",cpc:226,ctr:0.96,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:49,ctr:2.0,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:81,ctr:1.26,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:86,ctr:1.41,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:130,ctr:1.22,comment:"",img:null},
+    {business:"TGC KIDS CLUB",media:"Meta",format:"静止画",cpc:76,ctr:2.09,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:159,ctr:0.84,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:208,ctr:0.73,comment:"",img:null},
+    {business:"CLOUD NINE SCHOOL",media:"Meta",format:"静止画",cpc:182,ctr:0.65,comment:"",img:null},
+  ]
+};
+
+const SHEET_LABELS = {
+  "202603": "2026年3月",
+  "11～115": "1/1〜1/15",
+  "124~23": "1/24〜2/3",
+  "121~123": "1/21〜1/23"
+};
+
+const PALETTE = [
+  "#c4703a","#4a7c6f","#7b5ea7","#c4923a",
+  "#3a7bc4","#c43a6b","#3aab7b","#8f6a3a",
+  "#3a5fc4","#a73a5e","#5ea73a","#6a3ac4"
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let data = JSON.parse(JSON.stringify(INITIAL_DATA));
+let currentSheet = "202603";
+let filterBusiness = "ALL";
+let filterMedia = "ALL";
+let currentImageData = null;
+let charts = {};
+
+function getAllBusinesses() {
+  return [...new Set(Object.values(data).flat().map(d=>d.business))].sort();
+}
+function getBusinessColor(name) {
+  const all = [...new Set(Object.values(data).flat().map(d=>d.business))].sort();
+  return PALETTE[all.indexOf(name) % PALETTE.length];
+}
+function getCurrentFiltered() {
+  return (data[currentSheet]||[]).filter(d =>
+    (filterBusiness==="ALL" || d.business===filterBusiness) &&
+    (filterMedia==="ALL" || d.media===filterMedia)
+  );
+}
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  renderSheetTabs();
+  renderFilterBar();
+  renderAll();
+}
+
+function renderSheetTabs() {
+  const sheets = Object.keys(data);
+  document.getElementById('sheetTabs').innerHTML = sheets.map(s =>
+    `<button class="sheet-tab ${s===currentSheet?'active':''}" onclick="switchSheet('${s}')">${SHEET_LABELS[s]||s}</button>`
+  ).join('');
+}
+
+function switchSheet(s) {
+  currentSheet = s;
+  filterBusiness = "ALL";
+  filterMedia = "ALL";
+  renderSheetTabs();
+  renderFilterBar();
+  renderAll();
+}
+
+function renderFilterBar() {
+  const rows = data[currentSheet]||[];
+  const businesses = ["ALL", ...new Set(rows.map(d=>d.business))];
+  const medias = ["ALL", ...new Set(rows.map(d=>d.media))];
+  document.getElementById('filterBar').innerHTML = `
+    <div class="filter-group">
+      <span class="filter-label">事業：</span>
+      ${businesses.map(b=>`<button class="filter-btn ${b===filterBusiness?'active':''}" onclick="setFilter('business','${b}')">${b}</button>`).join('')}
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">媒体：</span>
+      ${medias.map(m=>`<button class="filter-btn ${m===filterMedia?'active':''}" onclick="setFilter('media','${m}')">${m}</button>`).join('')}
+    </div>
+  `;
+  // Update datalist
+  const dl = document.getElementById('businessList');
+  if(dl) dl.innerHTML = [...new Set(Object.values(data).flat().map(d=>d.business))].map(b=>`<option value="${b}">`).join('');
+}
+
+function setFilter(type, val) {
+  if(type==='business') filterBusiness = val;
+  else filterMedia = val;
+  renderFilterBar();
+  renderAll();
+}
+
+function renderAll() {
+  renderKPIs();
+  renderCharts();
+  renderTable();
+}
+
+// ─── KPIs ────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const rows = getCurrentFiltered();
+  const cpcs = rows.map(d=>d.cpc).filter(x=>x!=null&&!isNaN(x));
+  const ctrs = rows.map(d=>d.ctr).filter(x=>x!=null&&!isNaN(x));
+  const ac = avg(cpcs), at = avg(ctrs);
+  const kpis = [
+    {label:"バナー件数", value:rows.length+"件", sub:`${Object.keys(data).length}シート合計`, c:"var(--accent1)"},
+    {label:"平均 CPC", value: cpcs.length ? "¥"+Math.round(ac) : "—", sub:"クリック単価", c:"var(--accent2)"},
+    {label:"平均 CTR", value: ctrs.length ? at.toFixed(2)+"%" : "—", sub:"クリック率", c:"var(--accent3)"},
+    {label:"最低 CPC", value: cpcs.length ? "¥"+Math.min(...cpcs) : "—", sub:"最も安いクリック", c:"var(--accent4)"},
+    {label:"最高 CTR", value: ctrs.length ? Math.max(...ctrs).toFixed(2)+"%" : "—", sub:"最もクリックされた", c:"var(--red)"},
+  ];
+  document.getElementById('kpiRow').innerHTML = kpis.map(k=>`
+    <div class="kpi-card" style="--c:${k.c}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+function destroyChart(id) { if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderCharts() {
+  const rows = getCurrentFiltered();
+
+  // Aggregate by business
+  const byBiz = {};
+  rows.forEach(d=>{
+    if(!byBiz[d.business]) byBiz[d.business] = {cpcs:[],ctrs:[]};
+    if(d.cpc!=null) byBiz[d.business].cpcs.push(d.cpc);
+    if(d.ctr!=null) byBiz[d.business].ctrs.push(d.ctr);
+  });
+  const bizNames = Object.keys(byBiz);
+  const bizColors = bizNames.map(n=>getBusinessColor(n));
+
+  // CPC chart
+  destroyChart('cpc');
+  charts['cpc'] = new Chart(document.getElementById('chartCPC'), {
+    type:'bar',
+    data:{
+      labels: bizNames,
+      datasets:[{
+        label:'平均CPC (¥)',
+        data: bizNames.map(n=>Math.round(avg(byBiz[n].cpcs))),
+        backgroundColor: bizColors.map(c=>c+'cc'),
+        borderColor: bizColors,
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>`¥${c.parsed.y}`}}},
+      scales:{
+        x:{ticks:{color:'#7a6e62',font:{size:10},maxRotation:30},grid:{color:'#e8e0d0'}},
+        y:{ticks:{color:'#7a6e62',callback:v=>'¥'+v},grid:{color:'#e8e0d0'}}
+      }
+    }
+  });
+
+  // CTR chart
+  destroyChart('ctr');
+  charts['ctr'] = new Chart(document.getElementById('chartCTR'), {
+    type:'bar',
+    data:{
+      labels: bizNames,
+      datasets:[{
+        label:'平均CTR (%)',
+        data: bizNames.map(n=>+avg(byBiz[n].ctrs).toFixed(2)),
+        backgroundColor: bizColors.map(c=>c+'99'),
+        borderColor: bizColors,
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.y}%`}}},
+      scales:{
+        x:{ticks:{color:'#7a6e62',font:{size:10},maxRotation:30},grid:{color:'#e8e0d0'}},
+        y:{ticks:{color:'#7a6e62',callback:v=>v+'%'},grid:{color:'#e8e0d0'}}
+      }
+    }
+  });
+
+  // Media pie
+  const byMedia = {};
+  rows.forEach(d=>{ byMedia[d.media]=(byMedia[d.media]||0)+1; });
+  destroyChart('media');
+  charts['media'] = new Chart(document.getElementById('chartMedia'), {
+    type:'doughnut',
+    data:{
+      labels: Object.keys(byMedia),
+      datasets:[{ data: Object.values(byMedia), backgroundColor:['#c4703a','#4a7c6f','#7b5ea7','#c4923a'], borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'right',labels:{color:'#7a6e62',font:{size:11}}}}
+    }
+  });
+
+  // Format bar
+  const byFmt = {};
+  rows.forEach(d=>{
+    if(!byFmt[d.format]) byFmt[d.format]={ctrs:[]};
+    if(d.ctr!=null) byFmt[d.format].ctrs.push(d.ctr);
+  });
+  destroyChart('fmt');
+  charts['fmt'] = new Chart(document.getElementById('chartFormat'), {
+    type:'bar',
+    data:{
+      labels: Object.keys(byFmt),
+      datasets:[{
+        label:'平均CTR (%)',
+        data: Object.keys(byFmt).map(k=>+avg(byFmt[k].ctrs).toFixed(2)),
+        backgroundColor:['#4a7c6f99','#c4703a99','#7b5ea799','#c4923a99'],
+        borderColor:['#4a7c6f','#c4703a','#7b5ea7','#c4923a'],
+        borderWidth:2, borderRadius:6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#7a6e62'},grid:{color:'#e8e0d0'}},
+        y:{ticks:{color:'#7a6e62',callback:v=>v+'%'},grid:{color:'#e8e0d0'}}
+      }
+    }
+  });
+}
+
+// ─── TABLE ───────────────────────────────────────────────────────────────────
+function renderTable() {
+  const rows = getCurrentFiltered();
+  document.getElementById('recordCount').textContent = rows.length + '件';
+  const allRows = data[currentSheet]||[];
+  document.getElementById('tableBody').innerHTML = rows.map((d,i)=>{
+    const realIdx = allRows.indexOf(d);
+    const mediaBadge = d.media==='Tiktok' ? 'badge-tiktok' : 'badge-meta';
+    const fmtBadge = d.format==='動画' ? 'badge-video' : 'badge-still';
+    const color = getBusinessColor(d.business);
+    const imgCell = d.img
+      ? `<div class="img-cell" onclick="triggerRowImageUpload(${realIdx})" title="クリックで画像を変更">
+           <img src="${d.img}" class="img-thumb" alt="素材">
+           <div class="img-cell-overlay">✏️</div>
+         </div>`
+      : `<div class="no-img img-cell" onclick="triggerRowImageUpload(${realIdx})" title="クリックで画像を追加">
+           <span>＋</span>
+         </div>`;
+    return `<tr>
+      <td><input type="file" accept="image/*" style="display:none" id="row-file-${realIdx}" onchange="handleRowImageUpload(this,${realIdx})"><div>${imgCell}</div></td>
+      <td><span class="business-chip" style="background:${color}">${d.business}</span></td>
+      <td><span class="badge ${mediaBadge}">${d.media}</span></td>
+      <td><span class="badge ${fmtBadge}">${d.format}</span></td>
+      <td class="mono" style="color:var(--accent1);font-weight:600">${d.cpc!=null?'¥'+d.cpc:'—'}</td>
+      <td class="mono" style="color:var(--accent2);font-weight:600">${d.ctr!=null?d.ctr.toFixed(2)+'%':'—'}</td>
+      <td style="color:var(--mid);font-size:11px;max-width:200px">${d.comment||''}</td>
+      <td><button class="btn-delete" onclick="deleteEntry(${realIdx})">削除</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── ADD ENTRY ───────────────────────────────────────────────────────────────
+function addEntry() {
+  const business = document.getElementById('f_business').value.trim();
+  const media = document.getElementById('f_media').value;
+  const format = document.getElementById('f_format').value;
+  const cpc = parseFloat(document.getElementById('f_cpc').value);
+  const ctr = parseFloat(document.getElementById('f_ctr').value);
+  const comment = document.getElementById('f_comment').value.trim();
+
+  if(!business) { showToast('❌ 事業名を入力してください', true); return; }
+  if(!media) { showToast('❌ 媒体を選択してください', true); return; }
+  if(!format) { showToast('❌ 形式を選択してください', true); return; }
+
+  const entry = {
+    business,
+    media,
+    format,
+    cpc: isNaN(cpc) ? null : cpc,
+    ctr: isNaN(ctr) ? null : ctr,
+    comment,
+    img: currentImageData,
+  };
+
+  if(!data[currentSheet]) data[currentSheet] = [];
+  data[currentSheet].push(entry);
+
+  // Reset form
+  document.getElementById('f_business').value = '';
+  document.getElementById('f_media').value = '';
+  document.getElementById('f_format').value = '';
+  document.getElementById('f_cpc').value = '';
+  document.getElementById('f_ctr').value = '';
+  document.getElementById('f_comment').value = '';
+  clearImage();
+
+  renderFilterBar();
+  renderAll();
+  showToast('✅ データを追加しました！');
+  switchTab('table');
+}
+
+function deleteEntry(idx) {
+  if(!confirm('このデータを削除しますか？')) return;
+  data[currentSheet].splice(idx, 1);
+  renderAll();
+  showToast('🗑️ 削除しました');
+}
+
+// ─── ROW IMAGE UPLOAD ─────────────────────────────────────────────────────────
+function triggerRowImageUpload(idx) {
+  const input = document.getElementById('row-file-'+idx);
+  if(input) input.click();
+}
+function handleRowImageUpload(input, idx) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    data[currentSheet][idx].img = e.target.result;
+    renderTable();
+    showToast('🖼️ 画像を設定しました！');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── IMAGE ───────────────────────────────────────────────────────────────────
+function handleImageUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentImageData = e.target.result;
+    document.getElementById('uploadPlaceholder').style.display = 'none';
+    document.getElementById('uploadPreview').style.display = 'flex';
+    document.getElementById('previewImg').src = currentImageData;
+    document.getElementById('previewName').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('f_image').files = dt.files;
+    handleImageUpload(document.getElementById('f_image'));
+  }
+}
+function clearImage() {
+  currentImageData = null;
+  document.getElementById('f_image').value = '';
+  document.getElementById('uploadPlaceholder').style.display = 'block';
+  document.getElementById('uploadPreview').style.display = 'none';
+}
+
+// ─── TAB SWITCH ──────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  const tabs = ['overview','table','add'];
+  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)]?.classList.add('active');
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? 'var(--red)' : 'var(--accent2)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ─── START ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
